@@ -119,6 +119,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
     }
     // 触发beforeDestroy钩子函数
     callHook(vm, 'beforeDestroy')
+    // 设置_isBeingDestroyed为true，避免重复销毁
     vm._isBeingDestroyed = true
     // 清除当前组件与父组件之间的连接
     // 拿到父组件
@@ -127,12 +128,14 @@ export function lifecycleMixin (Vue: Class<Component>) {
       // 如果父组件存在，且未被销毁，则将当前组件实例从父组件实例的$children属性中删除
       remove(parent.$children, vm)
     }
-    // 该组件下的所有Watcher从其所在的Dep中释放
     if (vm._watcher) {
+      // 销毁Vue实例的watcher
       vm._watcher.teardown()
     }
+    // 将组件下的所有Watcher释放（vm._watchers在initState中定义）
     let i = vm._watchers.length
     while (i--) {
+      // teardown方法会使watcher从vm._watchers和它收集的deps中移除
       vm._watchers[i].teardown()
     }
     // 移除__ob__属性
@@ -158,8 +161,9 @@ export function lifecycleMixin (Vue: Class<Component>) {
   }
 }
 
-// mountComponent核⼼就是先调⽤vm._render⽅法先⽣成虚拟Node，再实例化⼀个渲染Watcher，
-// 在它的回调函数中会调⽤updateComponent⽅法，最终调⽤vm._update更新DOM
+// mountComponent核⼼就是先定义一个updateComponent方法，再实例化⼀个渲染Watcher，并将
+// updateComponent方法作为回调传入，在实例化watcher过程中触发回调，执行updateComponent函数，
+// updateComponent函数中会调⽤vm._render⽅法先⽣成虚拟Node，最终调⽤vm._update更新DOM
 export function mountComponent (
   vm: Component,
   el: ?Element,

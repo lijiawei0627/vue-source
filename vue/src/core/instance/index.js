@@ -23,10 +23,10 @@ function Vue (options) {
 }
 
 // 给	Vue	的	prototype	上扩展⼀些⽅法
-initMixin(Vue)  // 挂载_init方法
-stateMixin(Vue)  // 挂载$set、$watch、$delete方法
+initMixin(Vue)    // 挂载_init方法
+stateMixin(Vue)   // 挂载$set、$watch、$delete方法
 eventsMixin(Vue)  // $on、$once、$off、$emit方法
 lifecycleMixin(Vue)  // $foreUpdate、$destroy、_update方法
-renderMixin(Vue) // $nextTick、_render方法
+renderMixin(Vue)   // $nextTick、_render方法
 
 export default Vue

@@ -109,7 +109,7 @@ function markStaticRoots (node: ASTNode, isInFor: boolean) {
   }
 }
 
-// 判断一个node节点是否是static的
+// 判断一个节点是否是static的
 function isStatic (node: ASTNode): boolean {
   if (node.type === 2) { // 带变量的动态文本
     return false

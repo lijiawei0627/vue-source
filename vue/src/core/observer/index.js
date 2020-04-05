@@ -43,6 +43,7 @@ export class Observer {
   constructor (value: any) {
     this.value = value
     // 实例化一个Dep对象
+    // （注意，该dep实例被存放在Observer实例上，而且该Observer实例会被存放到当前value的__ob__属性上）
     this.dep = new Dep()
     this.vmCount = 0
      // 通过def函数将当前的Observer的实例赋给value上新增的一个不可枚举的属性__ob__，
@@ -52,8 +53,8 @@ export class Observer {
     def(value, '__ob__', this)
     // 如果data中有属性是数组，将修改后可以截获响应的数组方法替换掉该数组的原型中的原生方法，
     // 达到监听数组数据变化响应的效果。这里如果当前浏览器支持__proto__属性，
-    // 则直接覆盖当前数组对象原型上的原生数组方法，如果不支持该属性，
-    // 则直接覆盖数组对象的原型。
+    // 则直接覆盖当前数组对象原型，如果不支持该属性，
+    // 则直接将arrayMethods身上的方法设置到被侦测的数组身上。
     if (Array.isArray(value)) {
       if (hasProto) {
         protoAugment(value, arrayMethods)
@@ -160,7 +161,7 @@ export function defineReactive (
   // 在闭包中定义一个dep对象(依赖收集和派发的仓库)
   const dep = new Dep()
 
-  // 拿到传入对象的一些定义
+  // 拿到传入obj中key的一些定义
   const property = Object.getOwnPropertyDescriptor(obj, key)
   if (property && property.configurable === false) {
     return
@@ -240,16 +241,24 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  // 如果target是数组并且key是一个有效值
   if (Array.isArray(target) && isValidArrayIndex(key)) {
+    // 如果我们传递的索引值大于当前数组的length，就需要让target的length等于索引值
     target.length = Math.max(target.length, key)
+    // 使用splice把val设置到target时，数组拦截器会侦测到target发生变化，
+    // 并且会自动帮助我们把这个新增的val转成响应式
     target.splice(key, 1, val)
     return val
   }
   if (key in target && !(key in Object.prototype)) {
+    // 如果key已经存在target中，直接修改数据
     target[key] = val
     return val
   }
+  // 获取target的__ob__
   const ob = (target: any).__ob__
+  // 因为target不能时Vue实例或Vue实例的根数据对象，所以此处进行判断
+  // target._isVue判断是否为Vue实例，ob.vmCount判断是否为根数据
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid adding reactive properties to a Vue instance or its root $data ' +
@@ -257,11 +266,14 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
     )
     return val
   }
+  // 如果target不是响应式，那么就直接通过key和val在target身上设置即可
   if (!ob) {
     target[key] = val
     return val
   }
+  // 如果前面的条件都不满足，那么使用defineReactive将新增属性转换成getter/setter形式即可
   defineReactive(ob.value, key, val)
+  // 派发更新
   ob.dep.notify()
   return val
 }
@@ -277,10 +289,14 @@ export function del (target: Array<any> | Object, key: any) {
   }
   // 如果是数组，就利用splice方法来执行删除操作
   if (Array.isArray(target) && isValidArrayIndex(key)) {
+    // 使用splice删除元素时,数组拦截器会侦测到target发生变化,自动派发更新
     target.splice(key, 1)
     return
   }
+  // 获取target的__ob__
   const ob = (target: any).__ob__
+  // 因为target不能时Vue实例或Vue实例的根数据对象，所以此处进行判断
+  // target._isVue判断是否为Vue实例，ob.vmCount判断是否为根数据
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
       'Avoid deleting properties on a Vue instance or its root $data ' +
@@ -288,13 +304,17 @@ export function del (target: Array<any> | Object, key: any) {
     )
     return
   }
+  // 如果target中没有key属性,那么直接返回
   if (!hasOwn(target, key)) {
     return
   }
+  // 从target中将key删除
   delete target[key]
   if (!ob) {
+    // 如果target不是响应式数据,则直接返回
     return
   }
+  // 派发更新
   ob.dep.notify()
 }
 

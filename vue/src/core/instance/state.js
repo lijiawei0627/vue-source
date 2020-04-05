@@ -49,6 +49,8 @@ export function proxy (target: Object, sourceKey: string, key: string) {
 // 先初始化props，后初始化data，这样就可以在data中使用props中的数据了。在watch中既可以观察props
 // 又可以观察data，所以它是最后初始化的
 export function initState (vm: Component) {
+  // 用_watchers来保存vue实例的所有watcher
+  // 每当创建wacher实例时，都会将其添加到vm._watchers中
   vm._watchers = []
   const opts = vm.$options
   // 初始化props

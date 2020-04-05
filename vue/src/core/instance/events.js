@@ -60,12 +60,14 @@ export function eventsMixin (Vue: Class<Component>) {
   const hookRE = /^hook:/
   Vue.prototype.$on = function (event: string | Array<string>, fn: Function): Component {
     const vm: Component = this
-    // 当wevent参数为数组时，遍历数组，将其中的每一项递归调用vm.$on
+    // 当event参数为数组时，遍历数组，将其中的每一项递归调用vm.$on
     if (Array.isArray(event)) {
       for (let i = 0, l = event.length; i < l; i++) {
         vm.$on(event[i], fn)
       }
     } else {
+      // 注册事件到vm._events中，当该事件存在时，
+      // 直接将回调push到该事件所对应的事件列表中，否则对其事件函数列表进行初始化之后再push
       (vm._events[event] || (vm._events[event] = [])).push(fn)
       // optimize hook:event cost by using a boolean flag marked at registration
       // instead of a hash lookup
@@ -82,7 +84,7 @@ export function eventsMixin (Vue: Class<Component>) {
     function on () {
       // 只要事件一触发，便移除监听器
       vm.$off(event, on)
-      // 执行fn函数，并将参数arguments传递给函数fn
+      // 执行fn回调函数，并将参数arguments传递给函数fn
       fn.apply(vm, arguments)
     }
     // 保存fn函数到on函数上，以便于当我们使用拦截器代替监听器注入到时间列表中，移除监听器时操作有效
@@ -116,7 +118,7 @@ export function eventsMixin (Vue: Class<Component>) {
       }
       return vm
     }
-    // 判断是否存在该自定义事件监听器
+    // 从vm.$_events中取出事件列表
     const cbs = vm._events[event]
     // 如果不存在，则直接返回实例
     if (!cbs) {
@@ -127,12 +129,12 @@ export function eventsMixin (Vue: Class<Component>) {
       vm._events[event] = null
       return vm
     }
-    // specific handler
     let cb
     let i = cbs.length
-    // 移除与传入的fn相同的监听器
+    // 在cbs列表中找到与参数中提供的回调函数相同的那个函数，并将它从列表中移除
     while (i--) {
       cb = cbs[i]
+      // cb.fn === fn为vm.$once方法提供服务
       if (cb === fn || cb.fn === fn) {
         cbs.splice(i, 1)
         break
@@ -165,7 +167,7 @@ export function eventsMixin (Vue: Class<Component>) {
       const args = toArray(arguments, 1)
       const info = `event handler for "${event}"`
       for (let i = 0, l = cbs.length; i < l; i++) {
-        // 执行cbs中的回调函数，只不过其中使用了try...catch语句来捕获错误
+        // 执行cbs中的回调函数并将参数传递给监听回调，只不过其中使用了try...catch语句来捕获错误
         invokeWithErrorHandling(cbs[i], vm, args, vm, info)
       }
     }
