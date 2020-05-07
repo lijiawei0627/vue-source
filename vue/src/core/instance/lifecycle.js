@@ -230,7 +230,7 @@ export function mountComponent (
   // 这里对该实例注册一个Watcher实例，Watcher的getter为updateComponent函数，
   // 用于触发所有渲染所需要用到的数据的getter，
   // 进行依赖收集，该Watcher实例会存在所有渲染所需数据的闭包Dep中
-  // 此处的Watcher为渲染Watcher（除了渲染watcher之外，还存在computed watcher、user watcher等等）
+  // 此处的Watcher为渲染Watcher（除了渲染watcher之外，还存在computed watcher、user watcher）
 
   // Watcher在这⾥起到两个作⽤，⼀个是初始化的时候会执⾏回调函数，
   // 另⼀个是当vm实例中的监测的数据发⽣变化的时候执⾏回调函数
