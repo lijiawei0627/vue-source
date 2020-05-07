@@ -60,10 +60,11 @@ export default class Watcher {
     isRenderWatcher?: boolean
   ) {
     this.vm = vm
+    // 如果是渲染watcher，那么就会把该watcher赋值给组件实例的_watcher属性
     if (isRenderWatcher) {
       vm._watcher = this
     }
-    // _watchers存放订阅者实例
+    // _watchers存放该组件的所有的订阅者实例
     vm._watchers.push(this)
     // options
     if (options) {

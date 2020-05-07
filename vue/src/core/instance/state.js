@@ -65,7 +65,6 @@ export function initState (vm: Component) {
     observe(vm._data = {}, true /* asRootData */)
   }
   // 初始化computed
-  debugger
   if (opts.computed) initComputed(vm, opts.computed)
   // 初始化watchers
   if (opts.watch && opts.watch !== nativeWatch) {
@@ -83,7 +82,7 @@ function initProps (vm: Component, propsOptions: Object) {
   // 根据$parent是否存在来判断当前是否是根结点，
   // 如果不是，那么不需要将props数据转换成响应式数据。
   const isRoot = !vm.$parent
-  // root instance props should be converted
+  // root实例的props属性应该被转换成响应式数据
   if (!isRoot) {
     // 通过toggleObserving函数来确定并控制defineReactive函数调用时所传入的value参数
     // 是否需要转换成响应式。
@@ -106,7 +105,7 @@ function initProps (vm: Component, propsOptions: Object) {
         )
       }
       // 通过defineReactive函数，将props上的属性转换成响应式数据，
-      // 同时将通过调用validate函数得到的props数据设置到vm._props中
+      // 同时将通过调用validateProp函数得到的props数据设置到vm._props中
       // 注意：此时的参数中的props是指向于vm._props的
       defineReactive(props, key, value, () => {
         if (!isRoot && !isUpdatingChildComponent) {
@@ -203,8 +202,7 @@ export function getData (data: Function, vm: Component): any {
 const computedWatcherOptions = { lazy: true }
 
 function initComputed (vm: Component, computed: Object) {
-  debugger
-  // 用来保存计算属性的内部监视器watcher
+  // 用来保存计算属性的所有内部监视器watcher
   const watchers = vm._computedWatchers = Object.create(null)
   // computed properties are just getters during SSR
   const isSSR = isServerRendering()

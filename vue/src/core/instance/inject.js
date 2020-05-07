@@ -5,9 +5,11 @@ import { warn, hasSymbol } from '../util/index'
 import { defineReactive, toggleObserving } from '../observer/index'
 
 export function initProvide (vm: Component) {
+  // 获取用户定义的provide
   const provide = vm.$options.provide
   if (provide) {
-    // 将provided缓存到vm._provided上
+    // 当provide存在时，判断provide如果为函数，则执行它，并且返回给vm._provided，
+    // 否则直接返回给vm._provided
     vm._provided = typeof provide === 'function'
       ? provide.call(vm)
       : provide
@@ -21,9 +23,8 @@ export function initInjections (vm: Component) {
   if (result) {
     toggleObserving(false)
     Object.keys(result).forEach(key => {
-      /* istanbul ignore else */
       if (process.env.NODE_ENV !== 'production') {
-        // 通过defineReactive方法将其转为响应式数据
+        // 循环result并依次调用defineReactive函数，将它们设置到Vue.js实例上。
         defineReactive(vm, key, result[key], () => {
           warn(
             `Avoid mutating an injected value directly since the changes will be ` +
@@ -36,7 +37,8 @@ export function initInjections (vm: Component) {
         defineReactive(vm, key, result[key])
       }
     })
-    toggleObserving(true)
+    // 将shouldObserve设置为true，其作用通知defineReact函数将内容转为响应式。
+    toggleObserving(true)  // shouldObserve = value
   }
 }
 

@@ -8,42 +8,46 @@
 </head>
 <body>
     <div id="app">
-        <h2>{{msg}}</h2>
-        <h2>{{name}}</h2>
-        <h2>{{msg}}</h2>
-        <!-- <h2>{{message}}</h2> -->
-        <li v-for="(item, index) in arr" ::key="index">{{ item }}</li>
-        <button @click="change"></button>
+      <button @click="handleShow">click</button>
+      <h1>{{ fullName }}</h1>
+      <h1>{{ fullWife }}</h1>
+      <h1>{{ age }}</h1>
+      <!-- <h1>{{ person.name }}</h1> -->
     </div>
   <script src="./vue/dist/vue.js"></script>
   <script>
     var vm = new Vue({
       el: '#app',
-      data: {
-        msg: 'hello, world',
-        name: 'ljw',
-        arr: [1,2,3,4],
-        person: {}
+      data() {
+        return {
+          one: {
+            wife: 'ymh',
+            person: {
+              name: 'ljw'
+            }
+          },
+          age: 20
+        }
       },
       computed: {
-        message() {
-          return this.msg
+        fullName () {
+          return 'hello,' + this.one.person.name + this.age
+        },
+        fullWife () {
+          return this.one.wife
+        },
+        fullAge () {
+          return this.age
+        },
+        fulla () {
+          return this.age
         }
       },
       methods: {
-        change () {
-          this.name = this.message + '10000'
+        handleShow () {
+          vm.$set(this.person, 'show', 'hello,world')
         }
       },
-      watch: {
-        msg () {
-          console.log(this.msg)
-        }
-      }
-      // created() {
-      //   // console.log(this.handle)
-      //   this.handle()
-      // },
     })
   </script>
 </body>

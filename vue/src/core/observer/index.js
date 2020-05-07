@@ -44,6 +44,7 @@ export class Observer {
     this.value = value
     // 实例化一个Dep对象
     // （注意，该dep实例被存放在Observer实例上，而且该Observer实例会被存放到当前value的__ob__属性上）
+    // 此dep实例主要用来存放数组类型的依赖
     this.dep = new Dep()
     this.vmCount = 0
      // 通过def函数将当前的Observer的实例赋给value上新增的一个不可枚举的属性__ob__，
@@ -61,7 +62,8 @@ export class Observer {
       } else {
         copyAugment(value, arrayMethods, arrayKeys)
       }
-      // 如果是数组则需要遍历数组的每一个成员进行observe
+      // 如果数组的成员中有对象类型，则对该成员进行observe
+      // 即对于数组中object身上所有属性，也要进行依赖收集，
       this.observeArray(value)
     } else {
       // 如果是对象则直接walk进行绑定
@@ -82,6 +84,10 @@ export class Observer {
   // 对一个数组的每一个成员进行observe
   observeArray (items: Array<any>) {
     for (let i = 0, l = items.length; i < l; i++) {
+      // （并不是每个成员最终都会进行observe，因为observe传入的value为基本类型时会直接返回，
+      // 所以只有当该成员为对象类型，才能进行observe）
+      // 如果数组的成员中有对象类型，则对该成员进行observe
+      // 即对于数组中object身上所有属性，也要进行依赖收集
       observe(items[i])
     }
   }
@@ -122,7 +128,7 @@ function copyAugment (target: Object, src: Object, keys: Array<string>) {
 // 如果成功创建Observer实例则返回新的Observer实例，
 // 如果已有Observer实例则返回现有的Observer实例。
 export function observe (value: any, asRootData: ?boolean): Observer | void {
-  // value必须是一个对象，而且不是一个VNode实例
+  // value必须是一个对象，并且不是一个VNode实例
   if (!isObject(value) || value instanceof VNode) {
     return
   }
@@ -172,10 +178,15 @@ export function defineReactive (
   const getter = property && property.get
   const setter = property && property.set
   if ((!getter || setter) && arguments.length === 2) {
+    // 拿到当前key对应的值
     val = obj[key]
   }
 
-  // 对象的子对象递归进行observe并返回子节点的Observer对象，不断的进行递归observe
+  // 对当前key对应的对象递归进行observe并返回子对象的Observer对象，不断的进行递归observe
+  // 如果此时val为数组，那么将会返回该数组的Observe对象，并且通过childOb.dep.depend()进行依赖收集
+  // (简单来说就是，当key对应的value为对象类型时，对其进行递归observe，
+  // 并且返回该value的Observe实例，再通过childOb.dep.depend()进行依赖收集。
+  // 以便于后续通过value.__ob__来访问收集到的依赖)
   let childOb = !shallow && observe(val)
 
   // 将数据变成响应式对象
@@ -190,13 +201,19 @@ export function defineReactive (
         // 通过dep的depend进行依赖收集
         dep.depend()
         console.log(dep)
+        // if (key === 'name') {
+        //   console.log(dep.subs.length)
+        //   console.log(dep.subs[2])
+        // }
         // 子对象进行依赖收集，其实就是将同一个watcher观察者实例放进了两个depend中，
         // 一个是正在本身闭包中的depend（例如对象obj），另一个是子元素的depend（例如obj.a）
         if (childOb) {
+          // 通过此方法，我们也能达到将数组类型的依赖同步到该数组的__ob__.dep上
+          // 对key上的dep和value.__ob__上的dep做一个同步，
+          // 比如arr: [1, 2, 3, 4]。 key为arr，value为[1, 2, 3, 4]
           childOb.dep.depend()
           if (Array.isArray(value)) {
-            // 是数组则需要对每一个成员都进行依赖收集，如果数组的成员中有对象类型，则递归。
-            // 对于数组中object身上所有属性，也要进行依赖收集
+            // 数组每个元素也去做依赖收集
             dependArray(value)
           }
         }
@@ -327,6 +344,7 @@ function dependArray (value: Array<any>) {
     e = value[i]
     e && e.__ob__ && e.__ob__.dep.depend()
     if (Array.isArray(e)) {
+      // 由于数组中可能也包含有数组，所以同样需要对其进行依赖同步
       dependArray(e)
     }
   }
