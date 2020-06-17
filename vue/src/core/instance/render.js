@@ -67,7 +67,7 @@ export function renderMixin (Vue: Class<Component>) {
     return nextTick(fn, this)
   }
 
-  // _render渲染函数，返回一个VNode
+  // _render函数，返回一个VNode
   Vue.prototype._render = function (): VNode {
     const vm: Component = this
     // 从options中拿到render函数

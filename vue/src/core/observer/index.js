@@ -24,6 +24,7 @@ const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
  */
 export let shouldObserve: boolean = true
 
+// toggleObserving函数的作用是确定并控制defineReactive函数调用时所传入的value参数是否需要转换成响应式
 export function toggleObserving (value: boolean) {
   shouldObserve = value
 }
@@ -56,6 +57,7 @@ export class Observer {
     // 达到监听数组数据变化响应的效果。这里如果当前浏览器支持__proto__属性，
     // 则直接覆盖当前数组对象原型，如果不支持该属性，
     // 则直接将arrayMethods身上的方法设置到被侦测的数组身上。
+    // (arrayMethods继承自Array.prototype，具备其所有功能，但其中某些可以改变数组自身内容的方法是经过处理的)
     if (Array.isArray(value)) {
       if (hasProto) {
         protoAugment(value, arrayMethods)

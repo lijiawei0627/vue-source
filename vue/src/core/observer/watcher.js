@@ -124,7 +124,9 @@ export default class Watcher {
     let value
     const vm = this.vm
     try {
-      // 此处执行getter函数，实际上执行的是updateComponent函数，进行了渲染操作
+      // 此处执行getter函数，实际上执行的是传入的回调函数
+      // 可能是updateComponent函数，进行了渲染操作；
+      // 也可能是computed的getter计算函数，获取计算值；也可能是watch的回调函数
       value = this.getter.call(vm, vm)
     } catch (e) {
       // 执行了getter操作，看似执行了渲染操作，其实是执行了依赖收集。

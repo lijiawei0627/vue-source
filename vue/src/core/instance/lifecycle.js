@@ -222,7 +222,7 @@ export function mountComponent (
     // 	定义updateComponent⽅法
     updateComponent = () => {
       // 执行vue._render()生成虚拟dom（VNode），
-      // 再将其传入vm._update，_update 的核心就是调用 vm.__patch__ 方法，渲染成真实dom
+      // 再将其传入vm._update，_update 的核心就是调用 vm.__patch__ 方法，渲染成真实dom(替换掉el)
       vm._update(vm._render(), hydrating)
     }
   }
